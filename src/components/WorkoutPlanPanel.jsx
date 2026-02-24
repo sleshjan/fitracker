@@ -67,6 +67,7 @@ export default function WorkoutPlanPanel() {
                         '10 Jump squats',
                         '15 Push-ups',
                         '20 Mountain climbers',
+                        '20 lunges',
                         '15 Bent-over rows (bag/cylinder)',
                         '10 Burpees',
                         'Rest 1 min after each round.'
