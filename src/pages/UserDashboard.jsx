@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar'
 import DashboardPanel from '../components/DashboardPanel'
 import HistoryPanel from '../components/HistoryPanel'
 import AddWorkoutPanel from '../components/AddWorkoutPanel'
+import WorkoutPlanPanel from '../components/WorkoutPlanPanel'
 
 export default function UserDashboard() {
     const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'history' | 'add'
@@ -79,6 +80,8 @@ export default function UserDashboard() {
                 return <HistoryPanel workouts={workouts} />
             case 'add':
                 return <AddWorkoutPanel user={user} onWorkoutAdded={handleWorkoutAdded} />
+            case 'workout-plan':
+                return <WorkoutPlanPanel />
             default:
                 return <DashboardPanel workouts={workouts} />
         }

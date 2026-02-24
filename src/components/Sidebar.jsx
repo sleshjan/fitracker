@@ -3,7 +3,8 @@ import {
     History,
     PlusCircle,
     LogOut,
-    User
+    User,
+    ClipboardList
 } from 'lucide-react'
 import supabase from '../utils/supabase-client'
 import Logo from './Logo'
@@ -17,7 +18,8 @@ export default function Sidebar({ activeTab, setActiveTab, userEmail }) {
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'history', label: 'History', icon: History },
-        { id: 'add', label: 'Add Workout', icon: PlusCircle }
+        { id: 'add', label: 'Add Workout', icon: PlusCircle },
+        { id: 'workout-plan', label: 'Workout Plan', icon: ClipboardList }
     ]
 
     return (
