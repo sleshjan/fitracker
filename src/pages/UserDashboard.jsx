@@ -99,6 +99,7 @@ export default function UserDashboard() {
             {/* Main Content Area - Scrollable */}
             <main style={{
                 flex: 1,
+                minWidth: 0, // CRITICAL for ResponsiveContainer in flex
                 marginLeft: '260px', // Offset by sidebar width
                 height: '100vh',
                 overflowY: 'auto',

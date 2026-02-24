@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
     LineChart, Line, Legend, PieChart, Pie, Cell
@@ -6,6 +6,15 @@ import {
 import { Activity, LayoutList, Target } from 'lucide-react'
 
 export default function DashboardPanel({ workouts }) {
+    // Safe width: sidebar is 260px, padding ~96px. Always valid from first render.
+    const getWidth = () => Math.max(300, window.innerWidth - 260 - 96)
+    const [chartWidth, setChartWidth] = useState(getWidth)
+
+    useEffect(() => {
+        const onResize = () => setChartWidth(getWidth())
+        window.addEventListener('resize', onResize)
+        return () => window.removeEventListener('resize', onResize)
+    }, [])
 
     // Quick stats
     const totalWorkouts = workouts.length
@@ -27,7 +36,10 @@ export default function DashboardPanel({ workouts }) {
             if (!dataMap[workout.date]) {
                 dataMap[workout.date] = { date: workout.date, volume: 0, sessions: 0 }
             }
-            dataMap[workout.date].volume += (workout.sets * workout.reps)
+            // DB column is "reps/time", not "reps"
+            const s = Number(workout.sets) || 0;
+            const r = Number(workout['reps/time']) || 0;
+            dataMap[workout.date].volume += (s * r)
             dataMap[workout.date].sessions += 1
         })
 
@@ -180,82 +192,118 @@ export default function DashboardPanel({ workouts }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
 
                 {/* Line Chart: Volume over time */}
-                <div className="glass-card" style={{ padding: '2rem' }}>
+                <div className="glass-card" style={{ padding: '2rem', minWidth: 0 }}>
                     <h3 style={{ marginBottom: '2rem' }}>Total Rep Volume Over Time</h3>
-                    <div style={{ height: '300px', width: '100%', minWidth: 0, minHeight: 0 }}>
-                        <ResponsiveContainer width="99%" height="100%">
-                            <LineChart data={volumeData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.25)" />
-                                <XAxis dataKey="date" stroke="var(--text-dim)" fontSize={12} tickMargin={10} />
-                                <YAxis stroke="var(--text-dim)" fontSize={12} />
-                                <RechartsTooltip content={<CustomTooltip />} />
-                                <Legend />
-                                <Line
-                                    type="monotone"
-                                    name="Total Reps (Sets × Reps)"
-                                    dataKey="volume"
-                                    stroke="var(--primary)"
-                                    strokeWidth={3}
-                                    activeDot={{ r: 8 }}
-                                    dot={{ fill: 'var(--bg)', strokeWidth: 2 }}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
+                    <div style={{ width: '100%', height: '300px' }}>
+                        <LineChart
+                            width={chartWidth}
+                            height={300}
+                            data={volumeData}
+                            margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
+                        >
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                stroke="#a0a0a0"
+                                fontSize={11}
+                                tickMargin={10}
+                                axisLine={{ stroke: '#333' }}
+                                tickLine={{ stroke: '#333' }}
+                            />
+                            <YAxis
+                                stroke="#a0a0a0"
+                                fontSize={11}
+                                axisLine={{ stroke: '#333' }}
+                                tickLine={{ stroke: '#333' }}
+                            />
+                            <RechartsTooltip content={<CustomTooltip />} />
+                            <Legend iconType="circle" />
+                            <Line
+                                type="monotone"
+                                name="Total Reps (Sets × Reps)"
+                                dataKey="volume"
+                                stroke="#00d2ff"
+                                strokeWidth={3}
+                                activeDot={{ r: 6, fill: '#00d2ff', strokeWidth: 0 }}
+                                dot={{ fill: '#00d2ff', r: 3, strokeWidth: 0 }}
+                                isAnimationActive={false}
+                                connectNulls
+                            />
+                        </LineChart>
                     </div>
                 </div>
 
                 {/* Bar Chart: Sessions per day */}
-                <div className="glass-card" style={{ padding: '2rem' }}>
+                <div className="glass-card" style={{ padding: '2rem', minWidth: 0 }}>
                     <h3 style={{ marginBottom: '2rem' }}>Exercises Logged Per Day</h3>
-                    <div style={{ height: '300px', width: '100%', minWidth: 0, minHeight: 0 }}>
-                        <ResponsiveContainer width="99%" height="100%">
-                            <BarChart data={barChartData.data}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.5)" vertical={false} />
-                                <XAxis dataKey="date" stroke="var(--text-dim)" fontSize={12} tickMargin={10} />
-                                <YAxis stroke="var(--text-dim)" fontSize={12} allowDecimals={false} />
-                                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                                {barChartData.keys.map((key, index) => (
-                                    <Bar
-                                        key={key}
-                                        name={key}
-                                        dataKey={key}
-                                        stackId="a"
-                                        fill="transparent"
-                                        stroke={COLORS[index % COLORS.length]}
-                                        strokeWidth={4}
+                    <div style={{ width: '100%', height: '300px', minWidth: 0 }}>
+                        {chartWidth > 0 && (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={barChartData.data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                    <XAxis
+                                        dataKey="date"
+                                        stroke="#a0a0a0"
+                                        fontSize={11}
+                                        tickMargin={10}
+                                        axisLine={{ stroke: '#333' }}
+                                        tickLine={{ stroke: '#333' }}
                                     />
-                                ))}
-                            </BarChart>
-                        </ResponsiveContainer>
+                                    <YAxis
+                                        stroke="#a0a0a0"
+                                        fontSize={11}
+                                        allowDecimals={false}
+                                        axisLine={{ stroke: '#333' }}
+                                        tickLine={{ stroke: '#333' }}
+                                    />
+                                    <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                                    {barChartData.keys.map((key, index) => (
+                                        <Bar
+                                            key={key}
+                                            name={key}
+                                            dataKey={key}
+                                            stackId="a"
+                                            fill="transparent"
+                                            stroke={COLORS[index % COLORS.length]}
+                                            strokeWidth={3}
+                                            radius={[0, 0, 0, 0]}
+                                        />
+                                    ))}
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 
                 {/* Pie Chart: Workout Types */}
                 <div className="glass-card" style={{ padding: '2rem' }}>
                     <h3 style={{ marginBottom: '2rem' }}>Workout Type Distribution</h3>
-                    <div style={{ height: '300px', width: '100%', minWidth: 0, minHeight: 0 }}>
-                        <ResponsiveContainer width="99%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={typeData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={100}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {typeData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <RechartsTooltip
-                                    contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
-                                    itemStyle={{ color: 'var(--text)' }}
-                                />
-                                <Legend />
-                            </PieChart>
-                        </ResponsiveContainer>
+                    <div style={{ height: '300px', width: '100%', minWidth: 0 }}>
+                        {chartWidth > 0 && (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={typeData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={100}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                        stroke="none"
+                                    >
+                                        {typeData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <RechartsTooltip
+                                        contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                        itemStyle={{ color: 'var(--text)' }}
+                                    />
+                                    <Legend />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 
