@@ -38,7 +38,7 @@ export default function DashboardPanel({ workouts }) {
             }
             // DB column is "reps/time", not "reps"
             const s = Number(workout.sets) || 0;
-            const r = Number(workout['reps/time']) || 0;
+            const r = Number(workout['reps']) || 0;
             dataMap[workout.date].volume += (s * r)
             dataMap[workout.date].sessions += 1
         })
